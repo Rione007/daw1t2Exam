@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Reportes</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+
+<h1>📊 Reportes</h1>
+<a href="/" class="btn btn-secondary mb-3">⬅ Volver</a>
+
+<!-- Parte A -->
+<div class="card p-3 mb-4">
+  <h4>Reporte por Género</h4>
+  <form method="get" action="/reportes" class="d-flex mb-3">
+    <select name="genero" class="form-select me-2">
+      <option value="">Seleccione un género</option>
+      <option>POP</option>
+      <option>ROCK</option>
+      <option>JAZZ</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Cargar</button>
+  </form>
+
+  <table class="table table-bordered" th:if="${cancionesGenero != null}">
+    <thead>
+    <tr>
+      <th>Título</th>
+      <th>Duración</th>
+      <th>Fecha Lanzamiento</th>
+      <th>Reproducciones</th>
+      <th>Artista</th>
+      <th>País</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${cancionesGenero}">
+      <td th:text="${c.titulo}"></td>
+      <td th:text="${c.duracionSegundos}"></td>
+      <td th:text="${c.fechaLanzamiento}"></td>
+      <td th:text="${c.numeroReproducciones}"></td>
+      <td th:text="${c.artistaNombre}"></td>
+      <td th:text="${c.artistaPais}"></td>
+    </tr>
+    </tbody>
+  </table>
+
+  <p th:if="${totalGenero != null}"
+     th:text="'Total reproducciones para ' + ${generoSeleccionado} + ': ' + ${totalGenero}"></p>
+</div>
+
+<!-- Parte C -->
+<div class="card p-3">
+  <h4>Top Artistas</h4>
+  <form method="get" action="/reportes" class="d-flex mb-3">
+    <input type="number" name="limite" class="form-control me-2" placeholder="Cantidad">
+    <button type="submit" class="btn btn-primary">Cargar</button>
+  </form>
+
+  <table class="table table-bordered" th:if="${topArtistas != null}">
+    <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>País</th>
+      <th>Género</th>
+      <th>Total Reproducciones</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="a : ${topArtistas}">
+      <td th:text="${a.artistaNombre}"></td>
+      <td th:text="${a.artistaPais}"></td>
+      <td th:text="${a.generoMusical}"></td>
+      <td th:text="${a.totalReproducciones}"></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

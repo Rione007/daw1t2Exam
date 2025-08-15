@@ -147,28 +147,30 @@
     }
 
     document.getElementById('formCancion').addEventListener('submit', e => {
-        e.preventDefault();
-        const id = document.getElementById('id').value;
-        const data = {
-            titulo: document.getElementById('titulo').value,
-            duracionSegundos: document.getElementById('duracion').value,
-            fechaLanzamiento: document.getElementById('fecha').value || null,
-            numeroReproducciones: document.getElementById('reproducciones').value,
-            artista: { id: document.getElementById('artista').value }
-        };
+    e.preventDefault();
+    const id = document.getElementById('id').value;
 
-        const method = id ? 'PUT' : 'POST';
-        const url = id ? `${API_CANCIONES}/${id}` : API_CANCIONES;
+    const data = {
+        titulo: document.getElementById('titulo').value,
+        duracionSegundos: parseInt(document.getElementById('duracion').value) || null,
+        fechaLanzamiento: document.getElementById('fecha').value || null,
+        reproducciones: parseInt(document.getElementById('reproducciones').value) || 0,
+        artistaId: parseInt(document.getElementById('artista').value) // 🔹 ahora es artistaId
+    };
 
-        fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        }).then(() => {
-            modal.hide();
-            cargarCanciones();
-        });
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `${API_CANCIONES}/${id}` : API_CANCIONES;
+
+    fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(() => {
+        modal.hide();
+        cargarCanciones();
     });
+});
+
 
     function eliminarCancion(id) {
         if (confirm('¿Seguro que quieres eliminar esta canción?')) {
