@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Canciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h1 class="mb-4">🎵 Gestión de Canciones</h1>
+
+    <div class="d-flex mb-3 align-items-center">
+        <button class="btn btn-primary mb-3" onclick="abrirModal()">➕ Nueva Canción</button>
+        <a href="/" class="btn btn-secondary">⬅ Volver al inicio</a>
+    </div>
+
+
+
+    <!-- Tabla -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Título</th>
+            <th>Duración (seg)</th>
+            <th>Fecha Lanzamiento</th>
+            <th>Reproducciones</th>
+            <th>Artista</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody id="tabla-canciones">
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalCancion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="formCancion" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitulo">Nueva Canción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="id">
+
+                <div class="mb-3">
+                    <label class="form-label">Título</label>
+                    <input type="text" class="form-control" id="titulo" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Duración (segundos)</label>
+                    <input type="number" class="form-control" id="duracion">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha Lanzamiento</label>
+                    <input type="date" class="form-control" id="fecha">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Número de Reproducciones</label>
+                    <input type="number" class="form-control" id="reproducciones">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Artista</label>
+                    <select class="form-select" id="artista" required></select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_CANCIONES = '/api/canciones';
+    const API_ARTISTAS = '/api/artistas';
+    let modal;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        modal = new bootstrap.Modal(document.getElementById('modalCancion'));
+        cargarArtistas();
+        cargarCanciones();
+    });
+
+    function cargarArtistas() {
+        fetch(API_ARTISTAS)
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('artista');
+                select.innerHTML = data.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('');
+            });
+    }
+
+    function cargarCanciones() {
+        fetch(API_CANCIONES)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tabla-canciones');
+                tbody.innerHTML = '';
+                data.forEach(c => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${c.id}</td>
+                            <td>${c.titulo}</td>
+                            <td>${c.duracionSegundos || ''}</td>
+                            <td>${c.fechaLanzamiento || ''}</td>
+                            <td>${c.numeroReproducciones || 0}</td>
+                            <td>${c.artista?.nombre || ''}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarCancion(${c.id})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarCancion(${c.id})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function abrirModal() {
+        document.getElementById('formCancion').reset();
+        document.getElementById('id').value = '';
+        document.getElementById('modalTitulo').textContent = 'Nueva Canción';
+        modal.show();
+    }
+
+    function editarCancion(id) {
+        fetch(`${API_CANCIONES}/${id}`)
+            .then(res => res.json())
+            .then(c => {
+                document.getElementById('id').value = c.id;
+                document.getElementById('titulo').value = c.titulo;
+                document.getElementById('duracion').value = c.duracionSegundos;
+                document.getElementById('fecha').value = c.fechaLanzamiento || '';
+                document.getElementById('reproducciones').value = c.numeroReproducciones;
+                document.getElementById('artista').value = c.artista.id;
+                document.getElementById('modalTitulo').textContent = 'Editar Canción';
+                modal.show();
+            });
+    }
+
+    document.getElementById('formCancion').addEventListener('submit', e => {
+        e.preventDefault();
+        const id = document.getElementById('id').value;
+        const data = {
+            titulo: document.getElementById('titulo').value,
+            duracionSegundos: document.getElementById('duracion').value,
+            fechaLanzamiento: document.getElementById('fecha').value || null,
+            numeroReproducciones: document.getElementById('reproducciones').value,
+            artista: { id: document.getElementById('artista').value }
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_CANCIONES}/${id}` : API_CANCIONES;
+
+        fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(() => {
+            modal.hide();
+            cargarCanciones();
+        });
+    });
+
+    function eliminarCancion(id) {
+        if (confirm('¿Seguro que quieres eliminar esta canción?')) {
+            fetch(`${API_CANCIONES}/${id}`, { method: 'DELETE' })
+                .then(() => cargarCanciones());
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

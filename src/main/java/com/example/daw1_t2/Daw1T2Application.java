@@ -10,5 +10,7 @@ public class Daw1T2Application {
 		SpringApplication.run(Daw1T2Application.class, args);
 
 		System.out.println("http://localhost:9090/");
+
+
 	}
 }

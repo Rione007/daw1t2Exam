@@ -1,6 +1,7 @@
 package com.example.daw1_t2.api;
 
 import com.example.daw1_t2.entity.Artista;
+import com.example.daw1_t2.entity.GeneroMusical;
 import com.example.daw1_t2.service.ArtistaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -79,5 +80,10 @@ public class ArtistaRestController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @GetMapping("/generos")
+    public GeneroMusical[] listarGeneros() {
+        return GeneroMusical.values();
     }
 }

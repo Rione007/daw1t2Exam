@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Artistas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+    <h1 class="mb-4">🎤 Gestión de Artistas</h1>
+
+    <div class="d-flex mb-3 align-items-center">
+        <button class="btn btn-primary me-2" onclick="abrirModal()">➕ Nuevo Artista</button>
+        <a href="/" class="btn btn-secondary">⬅ Volver al inicio</a>
+    </div>
+
+
+    <!-- Tabla -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>País</th>
+            <th>Género Musical</th>
+            <th>Fecha Debut</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody id="tabla-artistas"></tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalArtista" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="formArtista" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitulo">Nuevo Artista</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="id">
+
+                <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">País de Origen</label>
+                    <input type="text" class="form-control" id="pais">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Género Musical</label>
+                    <select id="genero" class="form-select" required></select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha Debut</label>
+                    <input type="date" class="form-control" id="fecha">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const API_ARTISTAS = '/api/artistas';
+    let modal;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        modal = new bootstrap.Modal(document.getElementById('modalArtista'));
+        cargarGeneros();
+        cargarArtistas();
+    });
+
+    function cargarGeneros() {
+        fetch(`${API_ARTISTAS}/generos`)
+            .then(res => res.json())
+            .then(data => {
+                const select = document.getElementById('genero');
+                select.innerHTML = data.map(g => `<option value="${g}">${g}</option>`).join('');
+            });
+    }
+
+    function cargarArtistas() {
+        fetch(API_ARTISTAS)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tabla-artistas');
+                tbody.innerHTML = '';
+                data.forEach(a => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${a.id}</td>
+                            <td>${a.nombre}</td>
+                            <td>${a.paisOrigen || ''}</td>
+                            <td>${a.generoMusical || ''}</td>
+                            <td>${a.fechaDebut || ''}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editarArtista(${a.id})">Editar</button>
+                                <button class="btn btn-danger btn-sm" onclick="eliminarArtista(${a.id})">Eliminar</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function abrirModal() {
+        document.getElementById('formArtista').reset();
+        document.getElementById('id').value = '';
+        document.getElementById('modalTitulo').textContent = 'Nuevo Artista';
+        modal.show();
+    }
+
+    function editarArtista(id) {
+        fetch(`${API_ARTISTAS}/${id}`)
+            .then(res => res.json())
+            .then(a => {
+                document.getElementById('id').value = a.id;
+                document.getElementById('nombre').value = a.nombre;
+                document.getElementById('pais').value = a.paisOrigen;
+                document.getElementById('genero').value = a.generoMusical;
+                document.getElementById('fecha').value = a.fechaDebut || '';
+                document.getElementById('modalTitulo').textContent = 'Editar Artista';
+                modal.show();
+            });
+    }
+
+    document.getElementById('formArtista').addEventListener('submit', e => {
+        e.preventDefault();
+        const id = document.getElementById('id').value;
+        const data = {
+            nombre: document.getElementById('nombre').value,
+            paisOrigen: document.getElementById('pais').value,
+            generoMusical: document.getElementById('genero').value,
+            fechaDebut: document.getElementById('fecha').value || null
+        };
+
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${API_ARTISTAS}/${id}` : API_ARTISTAS;
+
+        fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(() => {
+            modal.hide();
+            cargarArtistas();
+        });
+    });
+
+    function eliminarArtista(id) {
+        if (confirm('¿Seguro que quieres eliminar este artista?')) {
+            fetch(`${API_ARTISTAS}/${id}`, { method: 'DELETE' })
+                .then(() => cargarArtistas());
+        }
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
